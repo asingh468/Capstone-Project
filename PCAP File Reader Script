@@ -1,0 +1,100 @@
+from scapy.all import *
+
+# The def print_packet_info then inspects the packet, takes the display_options_input provided, checks each packet layer (Data link, Network, Transport, and Application), and checks if the specific SCAPY LAYER NAMES/HEADERS are present within the packet. This then prints that relevant information as output seen in the demonstration. 
+
+# The function print_packet_info takes two parameters “packet” and “display_options” and prints “Packet Summary: “
+def print_packet_info(packet, display_options):
+    print(f"Packet Summary:")
+
+# NOTE: the SCAPY layer names ( [Ether], [IP], [IPv6], [TCP], [UDP], [ICMP] ) points at and addresses different layers of the packet to parse the desired fields within each layer
+
+# If “link” is found in the display_option and the Ethernet layer is present in the packet, print packet[Ether].src and packet[Ether].dst refers to the src and dst MAC Addresses
+
+# If the user selects the link layer when providing input and it exists within the packet, the program will print the src and dst MAC Addresses
+
+    if "link" in display_options and Ether in packet:
+        print(f"Link Layer Protocol: Ethernet, Source MAC: {packet[Ether].src}, Destination MAC: {packet[Ether].dst}")
+
+# If “network” is found in the display_option and either IPv4 or IPv6 layer is present in the Network Layer Protocol of the packet, print the corresponding lines
+
+# if the user selects the network layer when providing input and it exists within the packet, the program will print the src and dst IPv4 or IPv6 addresses
+
+    if "network" in display_options:
+        if IP in packet:
+            print(f"Network Layer Protocol: IPv4, Source IP: {packet[IP].src}, Destination IP: {packet[IP].dst}")
+        elif IPv6 in packet:
+            print(f"Network Layer Protocol: IPv6, Source IP: {packet[IPv6].src}, Destination IP: {packet[IPv6].dst}")
+
+# if “transport” is found in the display_options and TCP UDP or ICMP protocols are present in the transport layer protocol of the packet, print the corresponding lines
+
+# if the user selects the transport layer when providing input and it exists within the packet, the program will print the src/dst port or ICMP type and Code
+
+    if "transport" in display_options:
+        if TCP in packet:
+            print(f"Transport Layer Protocol: TCP, Source Port: {packet[TCP].sport}, Destination Port: {packet[TCP].dport}")
+        elif UDP in packet:
+            print(f"Transport Layer Protocol: UDP, Source Port: {packet[UDP].sport}, Destination Port: {packet[UDP].dport}")
+        elif ICMP in packet:
+            print(f"Transport Layer Protocol: ICMP, Type: {packet[ICMP].type}, Code: {packet[ICMP].code}")
+    
+
+
+# Print the application layer protocol if “application” is appended to the display_options array and TCP is found within queried packet
+
+# if the user selects the application layer when providing input and it exists within the packet and the TCP protocol dst port is 80 or 443, the program will print HTTP/HTTPS and if the UDP protocol dst port is 53 this will print DNS.
+
+    if "application" in display_options:
+        if TCP in packet and packet[TCP].dport in (80, 443):
+            # Assuming HTTP or HTTPS based on commonly used ports
+            print("Application Layer Protocol: HTTP/HTTPS")
+        elif UDP in packet and packet[UDP].dport == 53:
+            print("Application Layer Protocol: DNS")
+    print("-" * 40)
+
+# This function is called from the main function and uses the pcap_file and display_options arguments.
+def process_pcap_file(pcap_file, display_options):
+# Here we used the try-except statement to handle errors. I was originally going to use an if statement but CHATGpt assisted me and recommended try-ecept
+    Try:
+# rdpcap is a function provided by the Scapy library. It’s used to read a PCAP file and return a list of packets contained in the file. And we assign that list to the variable packets
+        packets = rdpcap(pcap_file)
+# Initialize a counter to keep track of the packet number
+        packet_count = 1  
+        for packet in packets:
+            print(f"Packet {packet_count}:")
+            print_packet_info(packet, display_options)
+# Increment the counter for the next packet
+            packet_count += 1  
+    except Exception as e:
+        print(f"Error reading the pcap file: {e}")
+
+
+#THIRD FUNCTION (TORY)
+
+Def main():
+ #This line prompts the user to enter the path to the pcapng file
+	pcap_file_path = input("Enter pcapng file path: ")
+ # Here is where user input options are defined (tailorable to customer needs)
+	print("Available display options:")
+	print("1. Link Layer")
+	print("2. Network Layer")
+	print("3. Transport Layer")
+	print("4. Application Layer")
+  #User inputs the numerical value corresponding to the desired output (split, if more than one options is selected)
+	display_options_input = input("Enter the numbers of options you want to display (e.g., 1,2,3,4): ").split(",")
+	# display_options_input = display_options_input.split(",")
+  #Display options are saved just above and are called here, ICW user selections
+    display_options = []
+	if "1" in display_options_input:
+    	display_options.append("link")
+	if "2" in display_options_input:
+    	display_options.append("network")
+	if "3" in display_options_input:
+    	display_options.append("transport")
+	if "4" in display_options_input:
+    	display_options.append("application")
+   #Reads the data in the file path location, producing user defined output
+	process_pcap_file(pcap_file_path, display_options)
+
+This line checks if the script is being run as the main module
+if __name__ == "__main__":
+        main()
